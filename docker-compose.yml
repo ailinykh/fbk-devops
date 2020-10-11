@@ -1,0 +1,40 @@
+version: '3.5'
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+    networks:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - 8001:80
+  #   networks:
+  #     - postgres
+  #   restart: unless-stopped
+
+  app:
+    build: .
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${PG_USER}:${PG_PASS}@postgres:5432/${PG_DB}
+    ports:
+      - 8080:80
+    networks:
+      - postgres
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
